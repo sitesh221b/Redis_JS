@@ -5,8 +5,18 @@ console.log("Logs from your program will appear here!");
 
 // Uncomment this block to pass the first stage
 const server = net.createServer((connection) => {
-  //send response to the client
-  connection.write("+PONG\r\n");
+  connection.on("data", (data) => {
+    // send response for every command received
+    connection.write("+PONG\r\n");
+  });
+
+  connection.on("error", (err) => {
+    console.error("Connection error:", err);
+  });
+
+  connection.on("end", () => {
+    console.log("Connection ended");
+  });
 });
 
 server.listen(6379, "127.0.0.1");
