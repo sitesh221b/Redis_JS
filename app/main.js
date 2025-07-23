@@ -65,11 +65,17 @@ const server = net.createServer((connection) => {
         }
         case "rpush": {
           const keyRPush = command[i + 2];
-          const valueRPush = command[i + 4];
           if (!globalMap[keyRPush]) {
             globalMap[keyRPush] = [];
           }
-          globalMap[keyRPush].push(valueRPush);
+          commandLength -= 2;
+          i += 4;
+          while (commandLength) {
+            const valueRPush = command[i];
+            globalMap[keyRPush].push(valueRPush);
+            commandLength--;
+            i += 2;
+          }
           connection.write(`:${globalMap[keyRPush].length}\r\n`);
           i += 5;
           break;
