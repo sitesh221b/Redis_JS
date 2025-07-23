@@ -75,8 +75,7 @@ const server = net.createServer((connection) => {
           break;
         }
         default:
-          connection.write("-ERR unknown command\r\n");
-          i = command.length; // Exit the loop on unknown command
+          break;
       }
     }
   });
