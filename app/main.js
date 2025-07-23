@@ -25,13 +25,13 @@ const server = net.createServer((connection) => {
         connection.write(`+${command[i + 2]}\r\n`);
         i += 2;
       } else if (command[i].toLowerCase() === "set") {
-        const key = command[i + 1];
-        const value = command[i + 2];
+        const key = command[i + 2];
+        const value = command[i + 4];
         globalMap[key] = value;
         connection.write(`+OK\r\n`);
-        i += 3;
+        i += 5;
       } else if (command[i].toLowerCase() === "get") {
-        const key = command[i + 1];
+        const key = command[i + 2];
         if (globalMap[key]) {
           connection.write(
             `$${globalMap[key].length}\r\n${globalMap[key]}\r\n`
@@ -39,7 +39,7 @@ const server = net.createServer((connection) => {
         } else {
           connection.write("$-1\r\n");
         }
-        i += 2;
+        i += 3;
       }
     }
   });
