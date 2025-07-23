@@ -80,6 +80,28 @@ const server = net.createServer((connection) => {
           i += 5;
           break;
         }
+        case "lrange": {
+          const keyLRange = command[i + 2];
+          const start = parseInt(command[i + 4], 10);
+          const end = parseInt(command[i + 6], 10);
+          if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
+            if (start > end || start >= globalMap[keyLRange].length) {
+              connection.write("*0\r\n");
+            }
+            if (end >= globalMap[keyLRange].length) {
+              end = globalMap[keyLRange].length - 1;
+            }
+            const range = globalMap[keyLRange].slice(start, end - start + 1);
+            connection.write(`*${range.length}\r\n`);
+            range.forEach((item) => {
+              connection.write(`$${item.length}\r\n${item}\r\n`);
+            });
+          } else {
+            connection.write("*0\r\n");
+          }
+          i += 7;
+          break;
+        }
         default:
           break;
       }
