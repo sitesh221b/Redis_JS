@@ -18,42 +18,63 @@ const server = net.createServer((connection) => {
       i = 2;
     }
     while (i < command.length) {
-      if (command[i].toLowerCase() === "ping") {
-        connection.write("+PONG\r\n");
-        i++;
-      } else if (command[i].toLowerCase() === "echo") {
-        connection.write(`+${command[i + 2]}\r\n`);
-        i += 2;
-      } else if (command[i].toLowerCase() === "set") {
-        const key = command[i + 2];
-        const value = command[i + 4];
-        globalMap[key] = value;
-        if (command[i + 6] && command[i + 6].toLowerCase() === "px") {
-          const expirationTime = parseInt(command[i + 8], 10);
-          setTimeout(() => {
-            delete globalMap[key];
-          }, expirationTime);
-          i += 9;
-        } else if (command[i + 6] && command[i + 6].toLowerCase() === "ex") {
-          const expirationTime = parseInt(command[i + 8], 10);
-          setTimeout(() => {
-            delete globalMap[key];
-          }, expirationTime * 1000);
-          i += 9;
-        } else {
+      switch (command[i].toLowerCase()) {
+        case "ping":
+          connection.write("+PONG\r\n");
+          i++;
+          break;
+        case "echo":
+          connection.write(`+${command[i + 2]}\r\n`);
+          i += 2;
+          break;
+        case "set": {
+          const key = command[i + 2];
+          const value = command[i + 4];
+          globalMap[key] = value;
+          if (command[i + 6] && command[i + 6].toLowerCase() === "px") {
+            const expirationTime = parseInt(command[i + 8], 10);
+            setTimeout(() => {
+              delete globalMap[key];
+            }, expirationTime);
+            i += 9;
+          } else if (command[i + 6] && command[i + 6].toLowerCase() === "ex") {
+            const expirationTime = parseInt(command[i + 8], 10);
+            setTimeout(() => {
+              delete globalMap[key];
+            }, expirationTime * 1000);
+            i += 9;
+          } else {
+            i += 5;
+          }
+          connection.write(`+OK\r\n`);
+          break;
+        }
+        case "get": {
+          const key = command[i + 2];
+          if (globalMap[key]) {
+            connection.write(
+              `$${globalMap[key].length}\r\n${globalMap[key]}\r\n`
+            );
+          } else {
+            connection.write("$-1\r\n");
+          }
+          i += 3;
+          break;
+        }
+        case "rpush": {
+          const keyRPush = command[i + 2];
+          const valueRPush = command[i + 4];
+          if (!globalMap[keyRPush]) {
+            globalMap[keyRPush] = [];
+          }
+          globalMap[keyRPush].push(valueRPush);
+          connection.write(`:${globalMap[keyRPush].length}\r\n`);
           i += 5;
+          break;
         }
-        connection.write(`+OK\r\n`);
-      } else if (command[i].toLowerCase() === "get") {
-        const key = command[i + 2];
-        if (globalMap[key]) {
-          connection.write(
-            `$${globalMap[key].length}\r\n${globalMap[key]}\r\n`
-          );
-        } else {
-          connection.write("$-1\r\n");
-        }
-        i += 3;
+        default:
+          connection.write("-ERR unknown command\r\n");
+          i = command.length; // Exit the loop on unknown command
       }
     }
   });
