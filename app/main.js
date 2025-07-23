@@ -19,14 +19,16 @@ const server = net.createServer((connection) => {
     }
     while (i < command.length) {
       switch (command[i].toLowerCase()) {
-        case "ping":
+        case "ping": {
           connection.write("+PONG\r\n");
           i++;
           break;
-        case "echo":
+        }
+        case "echo": {
           connection.write(`+${command[i + 2]}\r\n`);
           i += 2;
           break;
+        }
         case "set": {
           const key = command[i + 2];
           const value = command[i + 4];
