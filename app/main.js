@@ -7,114 +7,112 @@ const simpleDataTypes = ["+", "-", ":", "#", "("];
 const aggregateDataTypes = ["*", "$"];
 const globalMap = {};
 
+const setter = (command, conn) => {
+    const key = command[2];
+    const value = command[4];
+    globalMap[key] = value;
+    if (command[6] && command[6].toLowerCase() === "px") {
+        const expirationTime = parseInt(command[8], 10);
+        setTimeout(() => {
+            delete globalMap[key];
+        }, expirationTime);
+    } else if (command[6] && command[6].toLowerCase() === "ex") {
+        const expirationTime = parseInt(command[8], 10);
+        setTimeout(() => {
+            delete globalMap[key];
+        }, expirationTime * 1000);
+    }
+    conn.write(`+OK\r\n`);
+};
+
+const getter = (command, conn) => {
+    const key = command[4];
+    if (globalMap[key]) {
+        conn.write(`$${globalMap[key].length}\r\n${globalMap[key]}\r\n`);
+    } else {
+        conn.write("$-1\r\n");
+    }
+};
+
+const listPush = (command, conn) => {
+    const keyRPush = command[4];
+    const commandLength = parseInt(command[0].substring(1), 10);
+    if (!globalMap[keyRPush]) {
+        globalMap[keyRPush] = [];
+    }
+    commandLength -= 2;
+    let i = 6;
+    while (commandLength) {
+        const valueRPush = command[i];
+        globalMap[keyRPush].push(valueRPush);
+        commandLength--;
+        i += 2;
+    }
+    conn.write(`:${globalMap[keyRPush].length}\r\n`);
+};
+
+const listRange = (command, conn) => {
+    // *4 $5 lrange $3 key $5 value1 $5 value2
+    const keyLRange = command[2];
+    const start = parseInt(command[4], 10);
+    const end = parseInt(command[6], 10);
+    if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
+        if (start > end || start >= globalMap[keyLRange].length) {
+            conn.write("*0\r\n");
+        }
+        if (end >= globalMap[keyLRange].length) {
+            end = globalMap[keyLRange].length - 1;
+        }
+        const range = globalMap[keyLRange].slice(start, end - start + 1);
+        conn.write(`*${range.length}\r\n`);
+        range.forEach((item) => {
+            conn.write(`$${item.length}\r\n${item}\r\n`);
+        });
+    } else {
+        conn.write("*0\r\n");
+    }
+};
+
+const getResponse = (command, conn) => {
+    const mainCommand = command[2].toLowerCase();
+    switch (mainCommand) {
+        case "ping":
+            connection.write("+PONG\r\n");
+            break;
+        case "echo":
+            connection.write(`+${command[4]}\r\n`);
+            break;
+        case "get":
+            getter(command, conn);
+            break;
+        case "set":
+            setter(command, conn);
+            break;
+        case "rpush":
+            listPush(command, conn);
+            break;
+        case "lrange":
+            listRange(command, conn);
+            break;
+        default:
+            break;
+    }
+};
+
 // Uncomment this block to pass the first stage
 const server = net.createServer((connection) => {
-  connection.on("data", (data) => {
-    const command = data.toString().trim().split("\r\n");
-    let commandLength = 0;
-    let i = 0;
-    if (command[0].substring(0, 1) === "*") {
-      commandLength = parseInt(command[0].substring(1), 10);
-      i = 2;
-    }
-    while (i < command.length) {
-      switch (command[i].toLowerCase()) {
-        case "ping": {
-          connection.write("+PONG\r\n");
-          i++;
-          break;
-        }
-        case "echo": {
-          connection.write(`+${command[i + 2]}\r\n`);
-          i += 2;
-          break;
-        }
-        case "set": {
-          const key = command[i + 2];
-          const value = command[i + 4];
-          globalMap[key] = value;
-          if (command[i + 6] && command[i + 6].toLowerCase() === "px") {
-            const expirationTime = parseInt(command[i + 8], 10);
-            setTimeout(() => {
-              delete globalMap[key];
-            }, expirationTime);
-            i += 9;
-          } else if (command[i + 6] && command[i + 6].toLowerCase() === "ex") {
-            const expirationTime = parseInt(command[i + 8], 10);
-            setTimeout(() => {
-              delete globalMap[key];
-            }, expirationTime * 1000);
-            i += 9;
-          } else {
-            i += 5;
-          }
-          connection.write(`+OK\r\n`);
-          break;
-        }
-        case "get": {
-          const key = command[i + 2];
-          if (globalMap[key]) {
-            connection.write(
-              `$${globalMap[key].length}\r\n${globalMap[key]}\r\n`
-            );
-          } else {
-            connection.write("$-1\r\n");
-          }
-          i += 3;
-          break;
-        }
-        case "rpush": {
-          const keyRPush = command[i + 2];
-          if (!globalMap[keyRPush]) {
-            globalMap[keyRPush] = [];
-          }
-          commandLength -= 2;
-          i += 4;
-          while (commandLength) {
-            const valueRPush = command[i];
-            globalMap[keyRPush].push(valueRPush);
-            commandLength--;
-            i += 2;
-          }
-          connection.write(`:${globalMap[keyRPush].length}\r\n`);
-          i += 5;
-          break;
-        }
-        case "lrange": {
-          const keyLRange = command[i + 2];
-          const start = parseInt(command[i + 4], 10);
-          const end = parseInt(command[i + 6], 10);
-          if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
-            if (start > end || start >= globalMap[keyLRange].length) {
-              connection.write("*0\r\n");
-            }
-            if (end >= globalMap[keyLRange].length) {
-              end = globalMap[keyLRange].length - 1;
-            }
-            const range = globalMap[keyLRange].slice(start, end - start + 1);
-            connection.write(`*${range.length}\r\n`);
-            range.forEach((item) => {
-              connection.write(`$${item.length}\r\n${item}\r\n`);
-            });
-          } else {
-            connection.write("*0\r\n");
-          }
-          i += 7;
-          break;
-        }
-        default:
-          break;
-      }
-    }
-  });
+    connection.on("data", (data) => {
+        const command = data.toString().trim().split("\r\n");
+        getResponse(command, connection);
+    });
 
-  connection.on("error", (err) => {
-    console.error("Connection error:", err);
-  });
+    connection.on("error", (err) => {
+        console.error("Connection error:", err);
+    });
 
-  connection.on("end", () => {
-    console.log("Connection ended");
-  });
+    connection.on("end", () => {
+        console.log("Connection ended");
+    });
 });
 
 server.listen(6379, "127.0.0.1");
