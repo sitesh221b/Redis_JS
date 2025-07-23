@@ -63,7 +63,7 @@ const listRange = (command, conn) => {
         if (end >= globalMap[keyLRange].length) {
             end = globalMap[keyLRange].length - 1;
         }
-        const range = globalMap[keyLRange].slice(start, end - start + 1);
+        const range = globalMap[keyLRange].slice(start, end + 1);
         conn.write(`*${range.length}\r\n`);
         range.forEach((item) => {
             conn.write(`$${item.length}\r\n${item}\r\n`);
