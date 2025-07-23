@@ -29,17 +29,17 @@ const server = net.createServer((connection) => {
         const value = command[i + 4];
         globalMap[key] = value;
         if (command[i + 6] && command[i + 6].toLowerCase() === "px") {
-          const expirationTime = parseInt(command[i + 7], 10);
+          const expirationTime = parseInt(command[i + 8], 10);
           setTimeout(() => {
             delete globalMap[key];
           }, expirationTime);
-          i += 8;
+          i += 9;
         } else if (command[i + 6] && command[i + 6].toLowerCase() === "ex") {
-          const expirationTime = parseInt(command[i + 7], 10);
+          const expirationTime = parseInt(command[i + 8], 10);
           setTimeout(() => {
             delete globalMap[key];
           }, expirationTime * 1000);
-          i += 8;
+          i += 9;
         } else {
           i += 5;
         }
