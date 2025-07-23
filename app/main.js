@@ -5,11 +5,11 @@ console.log("Logs from your program will appear here!");
 
 const simpleDataTypes = ["+", "-", ":", "#", "("];
 const aggregateDataTypes = ["*", "$"];
-const globalMap = {};
 
 // Uncomment this block to pass the first stage
 const server = net.createServer((connection) => {
   connection.on("data", (data) => {
+    const globalMap = {};
     const command = data.toString().trim().split("\r\n");
     let commandLength = 0;
     let i = 0;
