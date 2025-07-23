@@ -36,7 +36,7 @@ const getter = (command, conn) => {
 
 const listPush = (command, conn) => {
     const keyRPush = command[4];
-    const commandLength = parseInt(command[0].substring(1), 10);
+    let commandLength = parseInt(command[0].substring(1), 10);
     if (!globalMap[keyRPush]) {
         globalMap[keyRPush] = [];
     }
