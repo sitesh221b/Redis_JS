@@ -53,9 +53,9 @@ const listPush = (command, conn) => {
 
 const listRange = (command, conn) => {
     // *4 $5 lrange $3 key $5 value1 $5 value2
-    const keyLRange = command[2];
-    const start = parseInt(command[4], 10);
-    const end = parseInt(command[6], 10);
+    const keyLRange = command[4];
+    const start = parseInt(command[6], 10);
+    const end = parseInt(command[8], 10);
     if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
         if (start > end || start >= globalMap[keyLRange].length) {
             conn.write("*0\r\n");
