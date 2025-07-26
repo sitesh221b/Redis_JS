@@ -52,6 +52,7 @@ const listRange = (command, conn) => {
     let end = parseInt(command[8], 10);
     if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
         if (start > end || start >= globalMap[keyLRange].length) {
+            console.log("Invalid range: start > end or start >= length");
             conn.write("*0\r\n");
         }
         // if (end >= globalMap[keyLRange].length) {
@@ -59,6 +60,14 @@ const listRange = (command, conn) => {
         // }
         //
         const range = globalMap[keyLRange].slice(start, end + 1);
+        console.log(
+            "Start:",
+            start,
+            "End:",
+            end,
+            "Range Length:",
+            range.length
+        );
         conn.write(`*${range.length}\r\n`);
         range.forEach((item) => {
             conn.write(`$${item.length}\r\n${item}\r\n`);
