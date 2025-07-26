@@ -2,3 +2,4 @@ node_modules/
 .vscode/
 .prettierc
 README.md
+test_file.sh

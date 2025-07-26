@@ -97,8 +97,6 @@ const getResponse = (command, conn) => {
         console.error("Error processing command:", command);
         throw error;
     } finally {
-        // Ensure the connection is closed after processing the command
-        conn.end();
     }
 };
 
