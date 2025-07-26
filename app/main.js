@@ -47,10 +47,9 @@ const listPush = (command, conn) => {
 };
 
 const listRange = (command, conn) => {
-    // *4 $5 lrange $3 key $5 value1 $5 value2
     const keyLRange = command[4];
     const start = parseInt(command[6], 10);
-    const end = parseInt(command[8], 10);
+    let end = parseInt(command[8], 10);
     if (globalMap[keyLRange] && Array.isArray(globalMap[keyLRange])) {
         if (start > end || start >= globalMap[keyLRange].length) {
             conn.write("*0\r\n");
@@ -103,7 +102,18 @@ const getResponse = (command, conn) => {
 const server = net.createServer((connection) => {
     connection.on("data", (data) => {
         const command = data.toString().trim().split("\r\n");
-        // const command = [];
+        // const command = [
+        //     "*4",
+        //     "$6",
+        //     "LRANGE",
+        //     "$5",
+        //     "apple",
+        //     "$1",
+        //     "0",
+        //     "$2",
+        //     "10",
+        //     "",
+        // ];
         getResponse(command, connection);
     });
 
