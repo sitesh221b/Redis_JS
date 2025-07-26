@@ -1,10 +1,5 @@
 const net = require("net");
 
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-console.log("Logs from your program will appear here!");
-
-const simpleDataTypes = ["+", "-", ":", "#", "("];
-const aggregateDataTypes = ["*", "$"];
 const globalMap = {};
 
 const setter = (command, conn) => {
@@ -74,35 +69,43 @@ const listRange = (command, conn) => {
 };
 
 const getResponse = (command, conn) => {
-    const mainCommand = command[2].toLowerCase();
-    switch (mainCommand) {
-        case "ping":
-            connection.write("+PONG\r\n");
-            break;
-        case "echo":
-            connection.write(`+${command[4]}\r\n`);
-            break;
-        case "get":
-            getter(command, conn);
-            break;
-        case "set":
-            setter(command, conn);
-            break;
-        case "rpush":
-            listPush(command, conn);
-            break;
-        case "lrange":
-            listRange(command, conn);
-            break;
-        default:
-            break;
+    try {
+        const mainCommand = command[2].toLowerCase();
+        switch (mainCommand) {
+            case "ping":
+                conn.write("+PONG\r\n");
+                break;
+            case "echo":
+                conn.write(`+${command[4]}\r\n`);
+                break;
+            case "get":
+                getter(command, conn);
+                break;
+            case "set":
+                setter(command, conn);
+                break;
+            case "rpush":
+                listPush(command, conn);
+                break;
+            case "lrange":
+                listRange(command, conn);
+                break;
+            default:
+                break;
+        }
+    } catch (error) {
+        console.error("Error processing command:", command);
+        throw error;
+    } finally {
+        // Ensure the connection is closed after processing the command
+        conn.end();
     }
 };
 
-// Uncomment this block to pass the first stage
 const server = net.createServer((connection) => {
     connection.on("data", (data) => {
         const command = data.toString().trim().split("\r\n");
+        // const command = [];
         getResponse(command, connection);
     });
 
