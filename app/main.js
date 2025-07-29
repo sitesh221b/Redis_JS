@@ -142,8 +142,8 @@ const addToStream = (command, conn) => {
     let streamId = command[6];
     if (streamId.split("-")[1] === "*") {
         const sequence = autoGenSequence(streamKey, streamId);
-        conn.write(`$${sequence.length}\r\n${sequence}\r\n`);
         streamId = streamId.replace("*", sequence);
+        conn.write(`$${streamId.length}\r\n${streamId}\r\n`);
     }
     const error = verifyStreamId(streamId, streamKey);
     if (error) {
