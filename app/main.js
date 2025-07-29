@@ -98,6 +98,8 @@ const getType = (command, conn) => {
         } else {
             conn.write(`+string\r\n`);
         }
+    } else if (streamData.has(keyType)) {
+        conn.write(`+stream\r\n`);
     } else {
         conn.write(`+none\r\n`);
     }
