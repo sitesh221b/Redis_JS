@@ -107,13 +107,13 @@ const addToStream = (command, conn) => {
     const streamKey = command[4];
     const streamId = command[6];
     const streamValues = command.slice(8);
-    const streamData = {};
+    const data = {};
     for (let i = 0; i < streamValues.length; i += 4) {
-        streamData[streamValues[i]] = streamValues[i + 2];
+        data[streamValues[i]] = streamValues[i + 2];
     }
     streamData.set(streamKey, {
         id: streamId,
-        ...{ streamData },
+        ...{ data },
     });
     conn.write(`$${streamId.length}\r\n${streamId}\r\n`);
 };
