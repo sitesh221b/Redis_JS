@@ -7,13 +7,13 @@ const setter = (command, conn) => {
     const value = command[6];
     globalMap[key] = { value };
     if (command[8] && command[8].toLowerCase() === "px") {
-        const expirationTime = parseInt(command[8], 10);
+        const expirationTime = parseInt(command[10], 10);
         // setTimeout(() => {
         //     delete globalMap[key];
         // }, expirationTime);
         globalMap[key].expiration = Date.now() + expirationTime;
     } else if (command[8] && command[8].toLowerCase() === "ex") {
-        const expirationTime = parseInt(command[8], 10);
+        const expirationTime = parseInt(command[10], 10);
         // setTimeout(() => {
         //     delete globalMap[key];
         // }, expirationTime * 1000);
@@ -31,11 +31,11 @@ const getter = (command, conn) => {
         ) {
             //delete globalMap[key];
             conn.write("$-1\r\n");
-        } else {
-            conn.write(
-                `$${globalMap[key].value.length}\r\n${globalMap[key].value}\r\n`
-            );
+            return;
         }
+        conn.write(
+            `$${globalMap[key].value.length}\r\n${globalMap[key].value}\r\n`
+        );
     } else {
         conn.write("$-1\r\n");
     }
