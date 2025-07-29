@@ -128,9 +128,25 @@ const verifyStreamId = (streamId, streamKey) => {
     return null;
 };
 
+const autoGenSequence = (streamKey, streamId) => {
+    if (streamData.has(streamKey)) {
+        const lastId = streamData.get(streamKey).slice(-1)?.[0].id;
+        //const milliseconds = parseInt(lastId.split("-")[0], 10);
+        const sequence = parseInt(lastId.split("-")[1], 10) + 1;
+        return `${sequence}`;
+    } else {
+        const sequence = 1;
+        return `${sequence}`;
+    }
+};
+
 const addToStream = (command, conn) => {
     const streamKey = command[4];
     const streamId = command[6];
+    if (streamId.split("-")[1] === "*") {
+        const sequence = autoGenSequence(streamKey, streamId);
+        streamId.replace("*", sequence);
+    }
     const error = verifyStreamId(streamId, streamKey);
     if (error) {
         conn.write(error);
