@@ -3,15 +3,15 @@ const net = require("net");
 const globalMap = {};
 
 const setter = (command, conn) => {
-    const key = command[2];
-    const value = command[4];
+    const key = command[4];
+    const value = command[6];
     globalMap[key] = value;
-    if (command[6] && command[6].toLowerCase() === "px") {
+    if (command[8] && command[8].toLowerCase() === "px") {
         const expirationTime = parseInt(command[8], 10);
         setTimeout(() => {
             delete globalMap[key];
         }, expirationTime);
-    } else if (command[6] && command[6].toLowerCase() === "ex") {
+    } else if (command[8] && command[8].toLowerCase() === "ex") {
         const expirationTime = parseInt(command[8], 10);
         setTimeout(() => {
             delete globalMap[key];
