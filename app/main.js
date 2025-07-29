@@ -1,6 +1,7 @@
 const net = require("net");
 
 const globalMap = {};
+const streamData = new Map();
 
 const setter = (command, conn) => {
     const key = command[4];
@@ -102,6 +103,21 @@ const getType = (command, conn) => {
     }
 };
 
+const addToStream = (command, conn) => {
+    const streamKey = command[4];
+    const streamId = command[6];
+    const streamValues = command.slice(8);
+    const streamData = {};
+    for (let i = 0; i < streamValues.length; i += 4) {
+        streamData[streamValues[i]] = streamValues[i + 2];
+    }
+    streamData.set(streamKey, {
+        id: streamId,
+        ...{ streamData },
+    });
+    conn.write(`$${streamId.length}\r\n${streamId}\r\n`);
+};
+
 const getResponse = (command, conn) => {
     try {
         const mainCommand = command[2].toLowerCase();
@@ -126,6 +142,9 @@ const getResponse = (command, conn) => {
                 break;
             case "type":
                 getType(command, conn);
+                break;
+            case "xadd":
+                addToStream(command, conn);
                 break;
             default:
                 break;
