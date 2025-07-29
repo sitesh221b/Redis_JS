@@ -77,6 +77,19 @@ const listRange = (command, conn) => {
     }
 };
 
+const getType = (command, conn) => {
+    const keyType = command[4];
+    if (globalMap[keyType]) {
+        if (Array.isArray(globalMap[keyType])) {
+            conn.write(`+list\r\n`);
+        } else {
+            conn.write(`+string\r\n`);
+        }
+    } else {
+        conn.write(`+none\r\n`);
+    }
+};
+
 const getResponse = (command, conn) => {
     try {
         const mainCommand = command[2].toLowerCase();
@@ -98,6 +111,9 @@ const getResponse = (command, conn) => {
                 break;
             case "lrange":
                 listRange(command, conn);
+                break;
+            case "type":
+                getType(command, conn);
                 break;
             default:
                 break;
