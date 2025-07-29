@@ -5,17 +5,19 @@ const globalMap = {};
 const setter = (command, conn) => {
     const key = command[4];
     const value = command[6];
-    globalMap[key] = value;
+    globalMap[key] = { value };
     if (command[8] && command[8].toLowerCase() === "px") {
         const expirationTime = parseInt(command[8], 10);
-        setTimeout(() => {
-            delete globalMap[key];
-        }, expirationTime);
+        // setTimeout(() => {
+        //     delete globalMap[key];
+        // }, expirationTime);
+        globalMap[key].expiration = Date.now() + expirationTime;
     } else if (command[8] && command[8].toLowerCase() === "ex") {
         const expirationTime = parseInt(command[8], 10);
-        setTimeout(() => {
-            delete globalMap[key];
-        }, expirationTime * 1000);
+        // setTimeout(() => {
+        //     delete globalMap[key];
+        // }, expirationTime * 1000);
+        globalMap[key].expiration = Date.now() + expirationTime * 1000;
     }
     conn.write(`+OK\r\n`);
 };
@@ -23,7 +25,17 @@ const setter = (command, conn) => {
 const getter = (command, conn) => {
     const key = command[4];
     if (globalMap[key]) {
-        conn.write(`$${globalMap[key].length}\r\n${globalMap[key]}\r\n`);
+        if (
+            globalMap[key].expiration &&
+            Date.now() > globalMap[key].expiration
+        ) {
+            //delete globalMap[key];
+            conn.write("$-1\r\n");
+            return;
+        }
+        conn.write(
+            `$${globalMap[key].value.length}\r\n${globalMap[key].value}\r\n`
+        );
     } else {
         conn.write("$-1\r\n");
     }
