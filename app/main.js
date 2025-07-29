@@ -113,7 +113,7 @@ const verifyStreamId = (streamId, streamKey) => {
         return "-ERR The ID specified in XADD must be in the format <milliseconds>-<sequence>\r\n";
     }
     if (streamData.has(streamKey)) {
-        const lastId = streamData.get(streamKey).slice(-1).id;
+        const lastId = streamData.get(streamKey).slice(-1)[0].id;
         const milliseconds = parseInt(streamId.split("-")[0], 10);
         const sequence = parseInt(streamId.split("-")[1], 10);
         const lastMilliseconds = parseInt(lastId.split("-")[0], 10);
