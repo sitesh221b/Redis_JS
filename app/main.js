@@ -31,11 +31,11 @@ const getter = (command, conn) => {
         ) {
             //delete globalMap[key];
             conn.write("$-1\r\n");
-            return;
+        } else {
+            conn.write(
+                `$${globalMap[key].value.length}\r\n${globalMap[key].value}\r\n`
+            );
         }
-        conn.write(
-            `$${globalMap[key].value.length}\r\n${globalMap[key].value}\r\n`
-        );
     } else {
         conn.write("$-1\r\n");
     }
