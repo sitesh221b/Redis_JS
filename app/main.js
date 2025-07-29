@@ -105,18 +105,56 @@ const getType = (command, conn) => {
     }
 };
 
+const verifyStreamId = (streamId, streamKey) => {
+    if (streamId === "0-0") {
+        return "-ERR The ID specified in XADD must be greater than 0-0\r\n";
+    }
+    if (!/^\d+-\d+$/.test(streamId)) {
+        return "-ERR The ID specified in XADD must be in the format <milliseconds>-<sequence>\r\n";
+    }
+    if (streamData.has(streamKey)) {
+        const lastId = streamData.get(streamKey).slice(-1).id;
+        const milliseconds = parseInt(streamId.split("-")[0], 10);
+        const sequence = parseInt(streamId.split("-")[1], 10);
+        const lastMilliseconds = parseInt(lastId.split("-")[0], 10);
+        const lastSequence = parseInt(lastId.split("-")[1], 10);
+        if (
+            milliseconds < lastMilliseconds ||
+            (milliseconds === lastMilliseconds && sequence <= lastSequence)
+        ) {
+            return "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n";
+        }
+    }
+    return null;
+};
+
 const addToStream = (command, conn) => {
     const streamKey = command[4];
     const streamId = command[6];
+    const error = verifyStreamId(streamId, streamKey);
+    if (error) {
+        conn.write(error);
+        return;
+    }
     const streamValues = command.slice(8);
     const data = {};
     for (let i = 0; i < streamValues.length; i += 4) {
         data[streamValues[i]] = streamValues[i + 2];
     }
-    streamData.set(streamKey, {
-        id: streamId,
-        ...{ data },
-    });
+    if (streamData.has(streamKey)) {
+        streamData.get(streamKey).push({
+            id: streamId,
+            ...{ data },
+        });
+    } else {
+        streamData.set(streamKey, [
+            {
+                id: streamId,
+                ...{ data },
+            },
+        ]);
+    }
+
     conn.write(`$${streamId.length}\r\n${streamId}\r\n`);
 };
 
